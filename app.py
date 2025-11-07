@@ -58,7 +58,7 @@ else:
                 st.info("Tidak ada kolom numerik untuk dibuat chart.")
             st.dataframe(df, use_container_width=True)
 
-        elif selected == "Pertumbuhan Pelanggan":
+       elif selected == "Pertumbuhan Pelanggan":
     if "Bulan" in df.columns:
         try:
             # Coba ubah ke datetime dulu
@@ -74,7 +74,7 @@ else:
     st.write("📊 Pertumbuhan Pelanggan per Bulan")
     st.dataframe(df, use_container_width=True)
 
-
     except Exception as e:
         st.error(f"Error baca Excel: {e}")
+
 
