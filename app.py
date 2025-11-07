@@ -46,7 +46,7 @@ else:
 
         st.subheader(f"📄 {selected}")
 
-        # --- KHUSUS UNTUK SHEET TERTENTU ---
+        # --- KHUSUS UNTUK SHEET MARKETING ADS ---
         if selected == "Marketing_ads":
             st.write("📈 Distribusi Biaya Iklan per Platform")
             numeric_cols = df.select_dtypes(include=["int64", "float64"]).columns
@@ -58,23 +58,24 @@ else:
                 st.info("Tidak ada kolom numerik untuk dibuat chart.")
             st.dataframe(df, use_container_width=True)
 
-       elif selected == "Pertumbuhan Pelanggan":
-    if "Bulan" in df.columns:
-        try:
-            # Coba ubah ke datetime dulu
-            df["Bulan"] = pd.to_datetime(df["Bulan"], errors="coerce")
-            if df["Bulan"].notna().any():
-                df["Bulan"] = df["Bulan"].dt.strftime("%B %Y")  # Oktober 2025
-            else:
-                # Kalau semua gagal (format teks manual), biarin tetap string
-                df["Bulan"] = df["Bulan"].astype(str)
-        except:
-            df["Bulan"] = df["Bulan"].astype(str)
+        # --- KHUSUS UNTUK SHEET PERTUMBUHAN PELANGGAN ---
+        elif selected == "Pertumbuhan Pelanggan":
+            if "Bulan" in df.columns:
+                try:
+                    df["Bulan"] = pd.to_datetime(df["Bulan"], errors="coerce")
+                    if df["Bulan"].notna().any():
+                        df["Bulan"] = df["Bulan"].dt.strftime("%B %Y")
+                    else:
+                        df["Bulan"] = df["Bulan"].astype(str)
+                except:
+                    df["Bulan"] = df["Bulan"].astype(str)
 
-    st.write("📊 Pertumbuhan Pelanggan per Bulan")
-    st.dataframe(df, use_container_width=True)
+            st.write("📊 Pertumbuhan Pelanggan per Bulan")
+            st.dataframe(df, use_container_width=True)
+
+        # --- UNTUK SHEET LAIN ---
+        else:
+            st.dataframe(df, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error baca Excel: {e}")
-
-
