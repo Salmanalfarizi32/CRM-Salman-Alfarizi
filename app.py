@@ -6,7 +6,7 @@ st.set_page_config(page_title="CRM Dashboard - Excel Auto Mode", layout="wide")
 st.title("📊 CRM Dashboard (Auto Excel Mode)")
 
 # Lokasi file di repo (misal taruh di folder data/)
-EXCEL_PATH = Path("data/CRM.xlsx")
+EXCEL_PATH = Path("data/CRM Salman Alfarizi.xlsx")
 
 SHEET_NAMES = [
     "VIP BUYER",
