@@ -26,7 +26,7 @@ def load_data(file_path, sheet_name):
         return pd.DataFrame()
 
 # === LOAD SEMUA SHEET ===
-file_path = "crm_data.xlsx"
+file_path = "CRM Salman Alfarizi.xlsx"
 
 sheet1 = load_data(file_path, "Pelanggan Baru")
 sheet2 = load_data(file_path, "VIP Buyer")
