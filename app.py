@@ -59,14 +59,22 @@ else:
             st.dataframe(df, use_container_width=True)
 
         elif selected == "Pertumbuhan Pelanggan":
-            if "Bulan" in df.columns:
-                df["Bulan"] = pd.to_datetime(df["Bulan"], errors="coerce")
-                df["Bulan"] = df["Bulan"].dt.strftime("%B %Y")  # jadi “Oktober 2025”
-            st.write("📊 Pertumbuhan Pelanggan per Bulan")
-            st.dataframe(df, use_container_width=True)
+    if "Bulan" in df.columns:
+        try:
+            # Coba ubah ke datetime dulu
+            df["Bulan"] = pd.to_datetime(df["Bulan"], errors="coerce")
+            if df["Bulan"].notna().any():
+                df["Bulan"] = df["Bulan"].dt.strftime("%B %Y")  # Oktober 2025
+            else:
+                # Kalau semua gagal (format teks manual), biarin tetap string
+                df["Bulan"] = df["Bulan"].astype(str)
+        except:
+            df["Bulan"] = df["Bulan"].astype(str)
 
-        else:
-            st.dataframe(df, use_container_width=True)
+    st.write("📊 Pertumbuhan Pelanggan per Bulan")
+    st.dataframe(df, use_container_width=True)
+
 
     except Exception as e:
         st.error(f"Error baca Excel: {e}")
+
