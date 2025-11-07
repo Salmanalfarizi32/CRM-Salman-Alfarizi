@@ -59,23 +59,38 @@ else:
             st.dataframe(df, use_container_width=True)
 
         # --- KHUSUS UNTUK SHEET PERTUMBUHAN PELANGGAN ---
-        elif selected == "Pertumbuhan Pelanggan":
-            if "Bulan" in df.columns:
-                try:
-                    df["Bulan"] = pd.to_datetime(df["Bulan"], errors="coerce")
-                    if df["Bulan"].notna().any():
-                        df["Bulan"] = df["Bulan"].dt.strftime("%B %Y")
-                    else:
-                        df["Bulan"] = df["Bulan"].astype(str)
-                except:
-                    df["Bulan"] = df["Bulan"].astype(str)
+       elif selected == "Pertumbuhan Pelanggan":
+    st.write("📊 Pertumbuhan Pelanggan per Bulan")
 
-            st.write("📊 Pertumbuhan Pelanggan per Bulan")
-            st.dataframe(df, use_container_width=True)
+    # pastikan kolom Bulan ada
+    if "Bulan" in df.columns:
+        df["Bulan"] = df["Bulan"].fillna("Tidak diketahui")
 
-        # --- UNTUK SHEET LAIN ---
+        # coba ubah ke datetime
+        df["Bulan_dt"] = pd.to_datetime(df["Bulan"], errors="coerce")
+
+        # kalau parsing gagal, tetap pakai teks aslinya
+        if df["Bulan_dt"].notna().any():
+            df["Bulan"] = df["Bulan_dt"].dt.strftime("%B %Y")
         else:
-            st.dataframe(df, use_container_width=True)
+            df["Bulan"] = df["Bulan"].astype(str)
 
-    except Exception as e:
-        st.error(f"Error baca Excel: {e}")
+        df.drop(columns=["Bulan_dt"], inplace=True)
+
+    else:
+        st.warning("Kolom 'Bulan' tidak ditemukan di sheet ini.")
+
+    # tampilkan tabel dan grafik (kalau ada kolom jumlah pelanggan)
+    st.dataframe(df, use_container_width=True)
+
+    if "Jumlah Pelanggan" in df.columns:
+        fig = px.bar(
+            df,
+            x="Bulan",
+            y="Jumlah Pelanggan",
+            title="Pertumbuhan Pelanggan per Bulan",
+            text_auto=True
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+
