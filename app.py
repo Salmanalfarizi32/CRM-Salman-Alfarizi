@@ -35,7 +35,7 @@ else:
         selected = st.sidebar.selectbox("Pilih sheet", available)
         df = all_sheets[selected].copy()
 
-        # --- FORMAT UANG HANYA UNTUK KOLOM YANG RELEVAN ---
+        # --- FORMAT UANG ---
         money_keywords = ["transaksi", "penjualan", "harga", "omzet", "biaya", "pendapatan"]
         for col in df.columns:
             if any(key in col.lower() for key in money_keywords):
@@ -44,7 +44,7 @@ else:
 
         st.subheader(f"📄 {selected}")
 
-        # --- MARKETING ADS: PIE CHART ---
+        # --- MARKETING ADS PIE CHART ---
         if selected == "Marketing_ads":
             st.write("📈 Distribusi Biaya Iklan per Platform")
             numeric_cols = df.select_dtypes(include=["int64", "float64"]).columns
@@ -54,43 +54,53 @@ else:
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("Tidak ada kolom numerik untuk dibuat chart.")
-            st.dataframe(df.style.set_properties(**{"text-align": "center"}), use_container_width=True)
+            st.dataframe(df, use_container_width=True)
 
-        # --- PERTUMBUHAN PELANGGAN: FIX BULAN NONE ---
+        # --- FIX PERTUMBUHAN PELANGGAN ---
         elif selected == "Pertumbuhan Pelanggan":
             if "Bulan" in df.columns:
-                # isi kosong isi default
-                df["Bulan"] = df["Bulan"].fillna("Tidak diketahui")
+                bulan_col = df["Bulan"].astype(str).str.strip()
 
-                # coba parsing tanggal
-                df["Bulan_dt"] = pd.to_datetime(df["Bulan"], errors="coerce")
+                def parse_bulan(x):
+                    # Coba datetime penuh
+                    try:
+                        return pd.to_datetime(x).strftime("%B %Y")
+                    except:
+                        pass
 
-                # kalau sukses, ubah ke format "Oktober 2025"
-                if df["Bulan_dt"].notna().any():
-                    df["Bulan"] = df["Bulan_dt"].dt.strftime("%B %Y")
-                else:
-                    # kalau gagal, biarkan teksnya
-                    df["Bulan"] = df["Bulan"].astype(str)
+                    # Coba format "2025-09" atau "2025/09"
+                    try:
+                        return pd.to_datetime(x + "-01").strftime("%B %Y")
+                    except:
+                        pass
 
-                df.drop(columns=["Bulan_dt"], inplace=True)
+                    # Kalau cuma teks bulan (Oktober, November, dst.)
+                    bulan_dict = {
+                        "januari": "Januari", "februari": "Februari", "maret": "Maret",
+                        "april": "April", "mei": "Mei", "juni": "Juni", "juli": "Juli",
+                        "agustus": "Agustus", "september": "September", "oktober": "Oktober",
+                        "november": "November", "desember": "Desember"
+                    }
+                    for k, v in bulan_dict.items():
+                        if k in x.lower():
+                            return f"{v} 2025"
+                    return x  # fallback biar nggak None
+
+                df["Bulan"] = bulan_col.apply(parse_bulan)
 
             st.write("📊 Pertumbuhan Pelanggan per Bulan")
-            st.dataframe(df.style.set_properties(**{"text-align": "center"}), use_container_width=True)
+            st.dataframe(df, use_container_width=True)
 
-            # buat grafik batang kalau ada kolom jumlah pelanggan
             if "Jumlah Pelanggan" in df.columns:
-                try:
-                    df_chart = df.copy()
-                    df_chart["Jumlah Pelanggan"] = pd.to_numeric(df_chart["Jumlah Pelanggan"], errors="coerce")
-                    fig = px.bar(df_chart, x="Bulan", y="Jumlah Pelanggan", text_auto=True,
-                                 title="Pertumbuhan Pelanggan per Bulan")
-                    st.plotly_chart(fig, use_container_width=True)
-                except Exception as e:
-                    st.info(f"Gagal buat chart: {e}")
+                df_chart = df.copy()
+                df_chart["Jumlah Pelanggan"] = pd.to_numeric(df_chart["Jumlah Pelanggan"], errors="coerce")
+                fig = px.bar(df_chart, x="Bulan", y="Jumlah Pelanggan", text_auto=True,
+                             title="Pertumbuhan Pelanggan per Bulan")
+                st.plotly_chart(fig, use_container_width=True)
 
-        # --- UNTUK SHEET LAIN ---
+        # --- SHEET LAIN ---
         else:
-            st.dataframe(df.style.set_properties(**{"text-align": "center"}), use_container_width=True)
+            st.dataframe(df, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error baca Excel: {e}")
