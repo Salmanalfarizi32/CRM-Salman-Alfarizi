@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 from pathlib import Path
 
 st.set_page_config(page_title="CRM Dashboard - Excel Auto Mode", layout="wide")
@@ -34,15 +35,38 @@ else:
         selected = st.sidebar.selectbox("Pilih sheet", available)
         df = all_sheets[selected]
 
-        # Format hanya kolom uang
+        # --- FORMAT KHUSUS ---
         money_keywords = ["transaksi", "penjualan", "harga", "omzet"]
         for col in df.columns:
             if any(key in col.lower() for key in money_keywords):
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-                df[col] = df[col].apply(lambda x: f"Rp {x:,.0f}".replace(",", ".") if pd.notnull(x) else "-")
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+                df[col] = df[col].apply(
+                    lambda x: f"Rp {x:,.0f}".replace(",", ".") if pd.notnull(x) else "-"
+                )
 
         st.subheader(f"📄 {selected}")
-        st.dataframe(df, use_container_width=True)
+
+        # --- KHUSUS UNTUK SHEET TERTENTU ---
+        if selected == "Marketing_ads":
+            st.write("📈 Distribusi Biaya Iklan per Platform")
+            numeric_cols = df.select_dtypes(include=["int64", "float64"]).columns
+            if len(numeric_cols) >= 1:
+                value_col = numeric_cols[0]
+                fig = px.pie(df, names=df.columns[0], values=value_col, title="Pie Chart Marketing Ads")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Tidak ada kolom numerik untuk dibuat chart.")
+            st.dataframe(df, use_container_width=True)
+
+        elif selected == "Pertumbuhan Pelanggan":
+            if "Bulan" in df.columns:
+                df["Bulan"] = pd.to_datetime(df["Bulan"], errors="coerce")
+                df["Bulan"] = df["Bulan"].dt.strftime("%B %Y")  # jadi “Oktober 2025”
+            st.write("📊 Pertumbuhan Pelanggan per Bulan")
+            st.dataframe(df, use_container_width=True)
+
+        else:
+            st.dataframe(df, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error baca Excel: {e}")
