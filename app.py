@@ -16,24 +16,48 @@ else:
         selected = st.sidebar.selectbox("📑 Pilih Sheet", list(all_sheets.keys()))
         df = all_sheets[selected].copy()
 
-        # Bersihkan data string
+        # Bersihkan spasi di semua kolom
         for col in df.columns:
             if df[col].dtype == "object":
                 df[col] = df[col].astype(str).str.strip()
 
-        # --- FORMAT KHUSUS UNTUK NOMINAL ---
-        money_keywords = ["transaksi", "penjualan", "harga", "omzet"]
-        for col in df.columns:
-            if any(k in col.lower() for k in money_keywords):
-                df[col] = pd.to_numeric(df[col], errors="coerce")
-                df[col] = df[col].apply(
-                    lambda x: f"Rp {x:,.0f}".replace(",", ".") if pd.notnull(x) else "-"
-                )
-
         st.subheader(f"📄 {selected}")
 
+        # --- SEGMENTASI CUSTOMER PER KOTA ---
+        if selected.lower() == "segmentasi customer per kota":
+            st.markdown("### 🏙️ Distribusi Pelanggan per Kota")
+            # pastikan kolom sesuai
+            city_col = df.columns[0]
+            count_col = df.columns[1]
+            fig = px.bar(
+                df.sort_values(by=count_col, ascending=True),
+                x=count_col,
+                y=city_col,
+                orientation="h",
+                color=count_col,
+                color_continuous_scale="blues",
+                title="Jumlah Pelanggan Berdasarkan Kota",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        # --- SEGMENTASI CUSTOMER PER PROVINSI ---
+        elif selected.lower() == "segmentasi customer per provins":
+            st.markdown("### 🗺️ Distribusi Pelanggan per Provinsi")
+            prov_col = df.columns[0]
+            count_col = df.columns[1]
+            fig = px.bar(
+                df.sort_values(by=count_col, ascending=True),
+                x=count_col,
+                y=prov_col,
+                orientation="h",
+                color=count_col,
+                color_continuous_scale="oranges",
+                title="Jumlah Pelanggan Berdasarkan Provinsi",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
         # --- SHEET MARKETING ADS ---
-        if selected.lower() == "marketing_ads":
+        elif selected.lower() == "marketing_ads":
             st.markdown("### 📈 Distribusi Biaya Iklan")
             numeric_cols = df.select_dtypes(include=["number"]).columns
             if len(numeric_cols) >= 1:
@@ -60,8 +84,9 @@ else:
                               title="📊 Tren Pertumbuhan Pelanggan")
                 st.plotly_chart(fig, use_container_width=True)
 
-        # --- TAMPILKAN DATAFRAME CUMA SEKALI ---
-        st.dataframe(df, use_container_width=True)
+        # --- TAMPILKAN DATAFRAME HANYA UNTUK SHEET NON-GRAFIK ---
+        elif selected.lower() not in ["segmentasi customer per kota", "segmentasi customer per provins"]:
+            st.dataframe(df, use_container_width=True)
 
     except Exception as e:
         st.error(f"⚠️ Error baca Excel: {e}")
