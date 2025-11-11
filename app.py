@@ -26,7 +26,6 @@ else:
         # --- SEGMENTASI CUSTOMER PER KOTA ---
         if selected.lower() == "segmentasi customer per kota":
             st.markdown("### 🏙️ Distribusi Pelanggan per Kota")
-            # pastikan kolom sesuai
             city_col = df.columns[0]
             count_col = df.columns[1]
             fig = px.bar(
@@ -84,8 +83,33 @@ else:
                               title="📊 Tren Pertumbuhan Pelanggan")
                 st.plotly_chart(fig, use_container_width=True)
 
-        # --- TAMPILKAN DATAFRAME HANYA UNTUK SHEET NON-GRAFIK ---
-        elif selected.lower() not in ["segmentasi customer per kota", "segmentasi customer per provins"]:
+        # --- SHEET CUSTOMER REGION (BARU) ---
+        elif selected.lower() == "customer region":
+            st.markdown("### 🌍 Data Pelanggan per Region")
+
+            expected_cols = ["Nama Customer", "Kota", "Provinsi", "Terakhir Transaksi", "Jenis Produk yang Dibeli"]
+            missing_cols = [c for c in expected_cols if c not in df.columns]
+            if missing_cols:
+                st.error(f"❌ Kolom berikut tidak ditemukan di sheet: {', '.join(missing_cols)}")
+            else:
+                # Sidebar filters
+                st.sidebar.markdown("### 🔍 Filter Data")
+                kota_filter = st.sidebar.multiselect("Pilih Kota", options=df["Kota"].unique())
+                prov_filter = st.sidebar.multiselect("Pilih Provinsi", options=df["Provinsi"].unique())
+                produk_filter = st.sidebar.multiselect("Pilih Jenis Produk", options=df["Jenis Produk yang Dibeli"].unique())
+
+                filtered_df = df.copy()
+                if kota_filter:
+                    filtered_df = filtered_df[filtered_df["Kota"].isin(kota_filter)]
+                if prov_filter:
+                    filtered_df = filtered_df[filtered_df["Provinsi"].isin(prov_filter)]
+                if produk_filter:
+                    filtered_df = filtered_df[filtered_df["Jenis Produk yang Dibeli"].isin(produk_filter)]
+
+                st.dataframe(filtered_df, use_container_width=True)
+
+        # --- DEFAULT: TAMPILKAN DATAFRAME ---
+        else:
             st.dataframe(df, use_container_width=True)
 
     except Exception as e:
