@@ -24,7 +24,7 @@ else:
         st.subheader(f"📄 {selected}")
 
         # --- SEGMENTASI CUSTOMER PER KOTA ---
-        if selected.lower() == "segmentasi customer per kota":
+        if selected.lower().strip() == "segmentasi customer per kota":
             st.markdown("### 🏙️ Distribusi Pelanggan per Kota")
             city_col = df.columns[0]
             count_col = df.columns[1]
@@ -40,7 +40,7 @@ else:
             st.plotly_chart(fig, use_container_width=True)
 
         # --- SEGMENTASI CUSTOMER PER PROVINSI ---
-        elif selected.lower() == "segmentasi customer per provins":
+        elif selected.lower().strip() == "segmentasi customer per provins":
             st.markdown("### 🗺️ Distribusi Pelanggan per Provinsi")
             prov_col = df.columns[0]
             count_col = df.columns[1]
@@ -56,7 +56,7 @@ else:
             st.plotly_chart(fig, use_container_width=True)
 
         # --- SHEET MARKETING ADS ---
-        elif selected.lower() == "marketing_ads":
+        elif selected.lower().strip() == "marketing_ads":
             st.markdown("### 📈 Distribusi Biaya Iklan")
             numeric_cols = df.select_dtypes(include=["number"]).columns
             if len(numeric_cols) >= 1:
@@ -65,7 +65,7 @@ else:
                 st.plotly_chart(fig, use_container_width=True)
 
         # --- SHEET PERTUMBUHAN PELANGGAN ---
-        elif selected.lower() == "pertumbuhan pelanggan":
+        elif selected.lower().strip() == "pertumbuhan pelanggan":
             if "Bulan" in df.columns:
                 def smart_format(val):
                     try:
@@ -83,8 +83,8 @@ else:
                               title="📊 Tren Pertumbuhan Pelanggan")
                 st.plotly_chart(fig, use_container_width=True)
 
-        # --- SHEET CUSTOMER REGION (BARU) ---
-        elif selected.lower() == "customer region":
+        # --- SHEET CUSTOMER REGION (FIXED & FILTER READY) ---
+        elif "customer region" in selected.lower():
             st.markdown("### 🌍 Data Pelanggan per Region")
 
             expected_cols = ["Nama Customer", "Kota", "Provinsi", "Terakhir Transaksi", "Jenis Produk yang Dibeli"]
@@ -92,11 +92,16 @@ else:
             if missing_cols:
                 st.error(f"❌ Kolom berikut tidak ditemukan di sheet: {', '.join(missing_cols)}")
             else:
-                # Sidebar filters
-                st.sidebar.markdown("### 🔍 Filter Data")
-                kota_filter = st.sidebar.multiselect("Pilih Kota", options=df["Kota"].unique())
-                prov_filter = st.sidebar.multiselect("Pilih Provinsi", options=df["Provinsi"].unique())
-                produk_filter = st.sidebar.multiselect("Pilih Jenis Produk", options=df["Jenis Produk yang Dibeli"].unique())
+                # --- Filter Section di tampilan utama ---
+                st.markdown("#### 🔍 Filter Data Pelanggan")
+
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    kota_filter = st.multiselect("Pilih Kota", options=sorted(df["Kota"].unique()))
+                with col2:
+                    prov_filter = st.multiselect("Pilih Provinsi", options=sorted(df["Provinsi"].unique()))
+                with col3:
+                    produk_filter = st.multiselect("Pilih Jenis Produk", options=sorted(df["Jenis Produk yang Dibeli"].unique()))
 
                 filtered_df = df.copy()
                 if kota_filter:
@@ -106,9 +111,11 @@ else:
                 if produk_filter:
                     filtered_df = filtered_df[filtered_df["Jenis Produk yang Dibeli"].isin(produk_filter)]
 
+                # --- Tampilkan hasil filter ---
+                st.markdown(f"Menampilkan **{len(filtered_df)}** data hasil filter:")
                 st.dataframe(filtered_df, use_container_width=True)
 
-        # --- DEFAULT: TAMPILKAN DATAFRAME ---
+        # --- DEFAULT ---
         else:
             st.dataframe(df, use_container_width=True)
 
